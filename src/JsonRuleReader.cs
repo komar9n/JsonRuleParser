@@ -23,7 +23,7 @@ namespace JsonRuleParser
         {
             Expression left = null;
 
-            if (statement.TryGetProperty(nameof(StatementExpression.Type), out JsonElement check))
+            if (statement.TryGetProperty("$type", out JsonElement check))
             {
                 string statementType = check.GetString().ToLower();
 

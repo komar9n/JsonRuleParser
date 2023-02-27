@@ -125,14 +125,12 @@ namespace JsonRuleParser.Tests
         // ("Context.Id" in (123456, 432156)) and ((not "Context.Description" = 'Description'))
         private static StatementExpression AndStatementTest1 => new AndExpression
         {
-            Type = "and",
             Statements = new StatementExpression[]
             {
                 new PredicateExpression
                 {
                     Attribute = "Context.Id",
                     Operator = Operators.Contains,
-                    Type = "predicate",
                     Value = new ValueExpression
                     {
                         ValueType = nameof(Int32),
@@ -141,17 +139,14 @@ namespace JsonRuleParser.Tests
                 },
                 new AndExpression
                 {
-                    Type = "and",
                     Statements = new StatementExpression[]
                     {
                         new NotExpression
                         {
-                            Type = "not",
                             Statement = new PredicateExpression
                             {
                                 Attribute = "Context.Description",
                                 Operator = Operators.Equals,
-                                Type = "predicate",
                                 Value = new ValueExpression
                                 {
                                     ValueType = nameof(String),
@@ -166,14 +161,12 @@ namespace JsonRuleParser.Tests
 
         private static StatementExpression AndStatementTest2 => new AndExpression
         {
-            Type = "and",
             Statements = new StatementExpression[]
             {
                 new PredicateExpression
                 {
                     Attribute = "Context.Id",
                     Operator = Operators.Contains,
-                    Type = "predicate",
                     Value = new ValueExpression
                     {
                         ValueType = nameof(Int32),
@@ -182,14 +175,12 @@ namespace JsonRuleParser.Tests
                 },
                 new AndExpression
                 {
-                    Type = "and",
                     Statements = new StatementExpression[]
                     {
                         new PredicateExpression
                         {
                             Attribute = "Events.EventId",
                             Operator = Operators.Equals,
-                            Type = "predicate",
                             Value = new ValueExpression
                             {
                                 ValueType = nameof(Int32),
