@@ -6,5 +6,6 @@
         public const string Contains = "contains";
         public const string Count = "count";
         public const string GreaterThan = "greaterthan";
+        public const string StartWith = "start_with";
     }
 }

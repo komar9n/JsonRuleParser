@@ -27,7 +27,8 @@ namespace JsonRuleParser.Tests
                             new Seat { PriceCodeType = "Regular 2" }
                         }
                     }
-                }
+                },
+                Customer = new Customer { Name = "John Smith" }
             },
             new OrderData
             {
@@ -44,7 +45,8 @@ namespace JsonRuleParser.Tests
                             new Seat { PriceCodeType = "Regular 3" }
                         }
                     }
-                }
+                },
+                Customer = new Customer { Name = "John Camel" }
             },
             new OrderData
             {
@@ -61,7 +63,8 @@ namespace JsonRuleParser.Tests
                             new Seat { PriceCodeType = "Regular 2" }
                         }
                     }
-                }
+                },
+                Customer = new Customer { Name = "John Smith" }
             },
             new OrderData
             {
@@ -78,7 +81,8 @@ namespace JsonRuleParser.Tests
                             new Seat { PriceCodeType = "Regular 2" }
                         }
                     }
-                }
+                },
+                Customer = new Customer { Name = "John Smith" }
             },
             new OrderData
             {
@@ -94,13 +98,15 @@ namespace JsonRuleParser.Tests
                             new Seat { PriceCodeType = "Regular 2" }
                         }
                     }
-                }
+                },
+                Customer = new Customer { Name = "Smith John" }
             },
         };
 
         private static IEnumerable<TestCaseData> StatementExpressionTestCases()
         {
             yield return new TestCaseData(AndStatementTest1, 2);
+            yield return new TestCaseData(AndStatementTest2, 3);
         }
 
         [Test, TestCaseSource("StatementExpressionTestCases")]
@@ -108,11 +114,14 @@ namespace JsonRuleParser.Tests
         {
             var options = new JsonSerializerOptions
             {
-                WriteIndented = true
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
             var reader = new JsonRuleReader<OrderData>();
-            var jsonDocument = JsonDocument.Parse(JsonSerializer.Serialize(statement, options));
+            var serializedJsonString = JsonSerializer.Serialize(statement, options);
+
+            var jsonDocument = JsonDocument.Parse(serializedJsonString);
 
             var predicate = reader.ParsePredicateOf(jsonDocument);
 
@@ -122,7 +131,7 @@ namespace JsonRuleParser.Tests
         }
 
         #region Test Expressions
-        // ("Context.Id" in (123456, 432156)) and ((not "Context.Description" = 'Description'))
+        // ("Context.Id" in (123456, 432156)) and ((not "Context.Description" = 'Description') and ("Customer.Name" = 'John Smith'))
         private static StatementExpression AndStatementTest1 => new AndExpression
         {
             Statements = new StatementExpression[]
@@ -153,12 +162,23 @@ namespace JsonRuleParser.Tests
                                     Values = new object[] { "Description" }
                                 }
                             }
+                        },
+                        new PredicateExpression
+                        {
+                            Attribute = "Customer.Name",
+                            Operator = Operators.Equals,
+                            Value = new ValueExpression
+                            {
+                                ValueType = nameof(String),
+                                Values = new object[] { "John Smith" }
+                            }
                         }
                     }
                 }
             }
         };
 
+        // ("Context.Id" = 123456) and ("Customer.Name" LIKE 'John%')
         private static StatementExpression AndStatementTest2 => new AndExpression
         {
             Statements = new StatementExpression[]
@@ -166,11 +186,11 @@ namespace JsonRuleParser.Tests
                 new PredicateExpression
                 {
                     Attribute = "Context.Id",
-                    Operator = Operators.Contains,
+                    Operator = Operators.Equals,
                     Value = new ValueExpression
                     {
                         ValueType = nameof(Int32),
-                        Values = new object[] { 123456, 432156 }
+                        Values = new object[] { 123456 }
                     }
                 },
                 new AndExpression
@@ -179,12 +199,12 @@ namespace JsonRuleParser.Tests
                     {
                         new PredicateExpression
                         {
-                            Attribute = "Events.EventId",
-                            Operator = Operators.Equals,
+                            Attribute = "Customer.Name",
+                            Operator = Operators.StartWith,
                             Value = new ValueExpression
                             {
-                                ValueType = nameof(Int32),
-                                Values = new object[] { 577 }
+                                ValueType = nameof(String),
+                                Values = new object[] { "John" }
                             }
                         }
                     }
@@ -201,6 +221,13 @@ namespace JsonRuleParser.Tests
             public Context Context { get; set; }
 
             public IList<Event> Events { get; set; }
+
+            public Customer Customer { get; set; }
+        }
+
+        class Customer
+        {
+            public string Name { get; set; }
         }
 
         class Context

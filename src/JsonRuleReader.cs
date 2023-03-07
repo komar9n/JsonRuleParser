@@ -1,6 +1,5 @@
 ﻿using JsonRuleParser.Expressions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,9 +14,7 @@ namespace JsonRuleParser
                         BindingFlags.Static | BindingFlags.Public)
                         .Single(m => m.Name == nameof(Enumerable.Contains) && m.GetParameters().Length == 2);
 
-        private readonly MethodInfo MethodCount = typeof(Enumerable).GetMethods(
-                        BindingFlags.Static | BindingFlags.Public)
-                        .Single(m => m.Name == nameof(Enumerable.Count) && m.GetParameters().Length == 2);
+        private readonly MethodInfo MethodStartWith = typeof(string).GetMethod(nameof(string.StartsWith), new[] { typeof(string) });
 
         private Expression GetStatementExpression(JsonElement statement, ParameterExpression parm)
         {
@@ -30,7 +27,7 @@ namespace JsonRuleParser
                 switch (statementType)
                 {
                     case StatementTypes.AndStatement:
-                        JsonElement.ArrayEnumerator andStatements = statement.GetProperty(nameof(AndExpression.Statements))
+                        JsonElement.ArrayEnumerator andStatements = statement.GetProperty(nameof(AndExpression.Statements).ToLower())
                             .EnumerateArray();
 
                         foreach (JsonElement item in andStatements)
@@ -50,7 +47,7 @@ namespace JsonRuleParser
                         return left;
 
                     case StatementTypes.OrStatement:
-                        JsonElement.ArrayEnumerator orStatements = statement.GetProperty(nameof(OrExpression.Statements))
+                        JsonElement.ArrayEnumerator orStatements = statement.GetProperty(nameof(OrExpression.Statements).ToLower())
                             .EnumerateArray();
 
                         foreach (JsonElement item in orStatements)
@@ -70,7 +67,7 @@ namespace JsonRuleParser
                         return left;
 
                     case StatementTypes.NotStatement:
-                        JsonElement notStatement = statement.GetProperty(nameof(NotExpression.Statement));
+                        JsonElement notStatement = statement.GetProperty(nameof(NotExpression.Statement).ToLower());
 
                         return Expression.Not(GetStatementExpression(notStatement, parm));
 
@@ -89,9 +86,9 @@ namespace JsonRuleParser
         {
             Expression property = null;
 
-            string predicateOperator = predicate.GetProperty(nameof(PredicateExpression.Operator)).GetString();
-            string attribute = predicate.GetProperty(nameof(PredicateExpression.Attribute)).GetString();
-            JsonElement valueElement = predicate.GetProperty(nameof(PredicateExpression.Value));
+            string predicateOperator = predicate.GetProperty(nameof(PredicateExpression.Operator).ToLower()).GetString();
+            string attribute = predicate.GetProperty(nameof(PredicateExpression.Attribute).ToLower()).GetString();
+            JsonElement valueElement = predicate.GetProperty(nameof(PredicateExpression.Value).ToLower());
 
             if (attribute.Contains("."))
             {
@@ -116,10 +113,8 @@ namespace JsonRuleParser
 
                     return Expression.Equal(property, toCompare);
 
-                case Operators.Count:
-                    MethodInfo count = MethodCount.MakeGenericMethod(paramType);
-
-                    return Expression.Call(count, new Expression[] { Expression.Constant(GetSingleOrDefault(values, paramType)), property });
+                case Operators.StartWith:
+                    return Expression.Call(property, MethodStartWith, Expression.Constant(GetSingleOrDefault(values, typeof(string))));
 
                 default:
                     throw new NotImplementedException($"The {predicateOperator} operator is not supported.");
@@ -144,8 +139,8 @@ namespace JsonRuleParser
 
         private Tuple<object, Type> GetValuesFromExpression(JsonElement valueElement)
         {
-            string valueType = valueElement.GetProperty(nameof(ValueExpression.ValueType)).GetString();
-            JsonElement valuesElement = valueElement.GetProperty(nameof(ValueExpression.Values));
+            string valueType = valueElement.GetProperty("valueType").GetString();
+            JsonElement valuesElement = valueElement.GetProperty(nameof(ValueExpression.Values).ToLower());
             Type paramType = typeof(int).Assembly.GetType($"System.{valueType}");
 
             switch (paramType)
