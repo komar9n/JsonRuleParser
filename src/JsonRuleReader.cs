@@ -116,6 +116,9 @@ namespace JsonRuleParser
                 case Operators.StartWith:
                     return Expression.Call(property, MethodStartWith, Expression.Constant(GetSingleOrDefault(values, typeof(string))));
 
+                case Operators.GreaterThan:
+                    return Expression.GreaterThan(property, Expression.Constant(GetSingleOrDefault(values, paramType)));
+
                 default:
                     throw new NotImplementedException($"The {predicateOperator} operator is not supported.");
             }

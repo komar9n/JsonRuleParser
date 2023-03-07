@@ -2,7 +2,6 @@ using JsonRuleParser.Expressions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 
@@ -41,6 +40,7 @@ namespace JsonRuleParser.Tests
                         EventName = "Test Event name",
                         Seats = new List<Seat>
                         {
+                            new Seat { PriceCodeType = "Regular 3" },
                             new Seat { PriceCodeType = "Regular 3" },
                             new Seat { PriceCodeType = "Regular 3" }
                         }
@@ -107,6 +107,7 @@ namespace JsonRuleParser.Tests
         {
             yield return new TestCaseData(AndStatementTest1, 2);
             yield return new TestCaseData(AndStatementTest2, 3);
+            yield return new TestCaseData(AndStatementTest3, 1);
         }
 
         [Test, TestCaseSource("StatementExpressionTestCases")]
@@ -212,6 +213,40 @@ namespace JsonRuleParser.Tests
             }
         };
 
+        // ("Context.Id" = 123456) and ("CountSeatsByPriceCode" > 2)
+        private static StatementExpression AndStatementTest3 => new AndExpression
+        {
+            Statements = new StatementExpression[]
+            {
+                new PredicateExpression
+                {
+                    Attribute = "Context.Id",
+                    Operator = Operators.Equals,
+                    Value = new ValueExpression
+                    {
+                        ValueType = nameof(Int32),
+                        Values = new object[] { 123456 }
+                    }
+                },
+                new AndExpression
+                {
+                    Statements = new StatementExpression[]
+                    {
+                        new PredicateExpression
+                        {
+                            Attribute = "CountSeatsByPriceCode",
+                            Operator = Operators.GreaterThan,
+                            Value = new ValueExpression
+                            {
+                                ValueType = nameof(Int32),
+                                Values = new object[] { 2 }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
 
         #endregion
 
@@ -223,6 +258,8 @@ namespace JsonRuleParser.Tests
             public IList<Event> Events { get; set; }
 
             public Customer Customer { get; set; }
+
+            public int CountSeatsByPriceCode => Events?.Select(e => e.Seats.Count(s => s.PriceCodeType.Equals("Regular 3"))).FirstOrDefault() ?? default;
         }
 
         class Customer
